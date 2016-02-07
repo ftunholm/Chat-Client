@@ -11,7 +11,6 @@ import java.awt.event.ActionListener;
 public class Notification extends SwingWorker<Void, Void> implements ActionListener {
 
     JFrame frame;
-
     private static Notification instance;
 
     public static Notification getInstance(Image headingIcon, String header, String paragraph) {
@@ -79,7 +78,7 @@ public class Notification extends SwingWorker<Void, Void> implements ActionListe
         frame.add(p);
     }
 
-    public void dispose() {
+    private void dispose() {
         this.frame.dispose();
         instance = null;
     }
