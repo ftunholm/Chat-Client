@@ -47,7 +47,7 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
         socket.close();
         chat.setText("");
         mainTextArea.setText("");
-        onlineList.setText("");
+        model.clear();
         onlineNameAndColor.clear();
         socket = null;
         connectBtn.setIcon(new ImageIcon(connectImg));
@@ -154,11 +154,11 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     }
 
     private void updateOnlineList() {
-        onlineList.setText("");
+        model.clear();
         List<String> sortedKeys = new ArrayList(onlineNameAndColor.keySet());
         Collections.sort(sortedKeys);
         for(String key : sortedKeys) {
-            onlineList.append(key + "\n");  //This will be sorted alphabetical
+            model.addElement(key); //This will be sorted alphabetical
         }
     }
 

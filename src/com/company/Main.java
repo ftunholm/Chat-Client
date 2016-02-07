@@ -17,10 +17,11 @@ public class Main extends JFrame {
     protected JTextField tfIp;
     protected JTextField nick;
     protected JTextField chat;
-    protected JTextArea onlineList;
+    protected JList onlineList;
     protected JFrame window;
     protected Image connectImg;
     protected Image disconnectImg;
+    protected DefaultListModel model;
 
     public Main() throws IOException {
         connectImg = ImageIO.read(getClass().getResource("connect.png")).getScaledInstance(22, 22, Image.SCALE_SMOOTH);
@@ -81,9 +82,12 @@ public class Main extends JFrame {
         onlineLab.setHorizontalAlignment(JLabel.CENTER);
         onlineLab.setVerticalAlignment(JLabel.CENTER);
 
-        onlineList = new JTextArea(mainTextArea.getHeight(), 15);
+        model = new DefaultListModel();
+        onlineList = new JList(model);
+        onlineList.setSelectionBackground(Color.DARK_GRAY);
+        onlineList.setSelectionForeground(Color.WHITE);
+        onlineList.setFixedCellWidth(150);
         onlineList.setFont(consoleFont);
-        onlineList.setEditable(false);
         onlineList.setBackground(Color.BLACK);
         onlineList.setForeground(Color.WHITE);
         onlineList.setBorder(blackBorder);
