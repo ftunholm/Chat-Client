@@ -11,7 +11,17 @@ import java.awt.event.ActionListener;
 public class Notification extends SwingWorker<Void, Void> implements ActionListener {
 
     JFrame frame;
-    public Notification(Image headingIcon, String header, String paragraph) {
+
+    private static Notification instance;
+
+    public static Notification getInstance(Image headingIcon, String header, String paragraph) {
+        if (instance == null) {
+            instance = new Notification(headingIcon, header, paragraph);
+        }
+        return instance;
+    }
+
+    private Notification(Image headingIcon, String header, String paragraph) {
         frame = new JFrame();
         frame.setIconImage(headingIcon);
         frame.setSize(300, 125);
@@ -69,15 +79,20 @@ public class Notification extends SwingWorker<Void, Void> implements ActionListe
         frame.add(p);
     }
 
+    public void dispose() {
+        this.frame.dispose();
+        instance = null;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        frame.dispose();
+        dispose();
     }
 
     @Override
     protected Void doInBackground() throws Exception {
         Thread.sleep(5000);
-        frame.dispose();
+        dispose();
         return null;
     }
 }

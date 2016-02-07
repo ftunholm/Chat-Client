@@ -116,7 +116,7 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 if (!window.isActive()) {
-                    new Notification(connectImg, header, paragraph).execute();
+                    Notification.getInstance(connectImg, header, paragraph).execute();
                 }
             }
         });
