@@ -131,6 +131,9 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
             appendToPane(mainTextArea, "Welcome to Linkura Chat!", Color.RED, Color.DARK_GRAY);
             window.setTitle("Linkura Chat Client - " + nick.getText());
         }
+        else if (str.equals("NICK TAKEN")) {
+            appendToPane(mainTextArea, "Nickname already in use, please pick another one!", Color.RED, Color.BLUE);
+        }
         else if (str.startsWith("JOINED")) {
             String name = str.replace("JOINED", "").trim();
             onlineNameAndColor.put(name, getRandomColor());
