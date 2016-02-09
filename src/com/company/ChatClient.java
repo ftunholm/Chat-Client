@@ -42,7 +42,7 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
         socket.close();
         chat.setText("");
         mainTextArea.setText("");
-        onlineList.setText("");
+        model.clear();
         onlineNameAndColor.clear();
         socket = null;
         connectBtn.setIcon(new ImageIcon(connectImg));
@@ -103,7 +103,7 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     private void createPopupAsync(final String header, final String paragraph) {
         SwingUtilities.invokeLater(() -> {
             if (!window.isActive()) {
-                new Notification(connectImg, header, paragraph).execute();
+                Notification.getInstance(connectImg, header, paragraph).execute();
             }
         });
     }
@@ -120,6 +120,9 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
         else if (str.equals("NICK OK")) {
             appendToPane(mainTextArea, "Welcome to Linkura Chat!", Color.RED, Color.DARK_GRAY);
             window.setTitle("Linkura Chat Client - " + nick.getText());
+        }
+        else if (str.equals("NICK TAKEN")) {
+            appendToPane(mainTextArea, "Nickname already in use, please pick another one!", Color.RED, Color.BLUE);
         }
         else if (str.startsWith("JOINED")) {
             String name = str.replace("JOINED", "").trim();
@@ -144,11 +147,11 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     }
 
     private void updateOnlineList() {
-        onlineList.setText("");
+        model.clear();
         List<String> sortedKeys = new ArrayList(onlineNameAndColor.keySet());
         Collections.sort(sortedKeys);
         for(String key : sortedKeys) {
-            onlineList.append(key + "\n");  //This will be sorted alphabetical
+            model.addElement(key); //This will be sorted alphabetical
         }
     }
 
