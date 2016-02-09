@@ -8,10 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -26,13 +23,12 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     private BufferedWriter out;
     private HashMap<String, Color> onlineNameAndColor;
     private Socket socket;
-    private volatile boolean running = true;
     private Stack<String> latestMessages;
     private int counter;
 
     public ChatClient() throws IOException {
         counter = 0;
-        latestMessages = new Stack<String>();
+        latestMessages = new Stack<>();
         latestMessages.push("");
         onlineNameAndColor = new HashMap<>();
         connectBtn.addActionListener(this);
@@ -43,7 +39,6 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     }
 
     private void disconnect() throws IOException {
-        running = false;
         socket.close();
         chat.setText("");
         mainTextArea.setText("");
@@ -57,14 +52,18 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
 
     private void connect() throws BadLocationException, IOException {
         try {
-            socket = new Socket(tfIp.getText(), Integer.parseInt(tfPort.getText()));
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(tfIp.getText(), Integer.parseInt(tfPort.getText())), 2000);
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            running = true;
             createReaderThread();
             chat.requestFocus();
             connectBtn.setIcon(new ImageIcon(disconnectImg));
             connectBtn.setToolTipText("Disconnect");
+        }
+        catch (SocketTimeoutException e5) {
+            disconnect();
+            appendToPane(mainTextArea, "[" + getTime() + "] *** Socket Timeout! ***", Color.RED, Color.YELLOW);
         }
         catch (NumberFormatException e2) {
             appendToPane(mainTextArea, "[" + getTime() + "] *** Wrong port or address! ***", Color.RED, Color.YELLOW);
@@ -84,40 +83,27 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     }
 
     private void createReaderThread () {
-        Thread read = new Thread(new Runnable() {
-            public void run() {
-                String line;
-                while(running) {
-                    try {
-                        line = in.readLine();
-                        handleInput(line);
-                    }
-                    catch (SocketException e1) {
-                        //When disconnecting read might be called, this exception will occur then, ignore it
-                    }
-                    catch (Exception e) { //Remote server probably closed socket
-                        try {
-                            running = false;
-                            socket.close();
-                            appendToPane(mainTextArea, "[" + getTime() + "] *** You have been disconnected! ***", Color.RED, Color.YELLOW);
-                        } catch (BadLocationException e1) {
-                            e1.printStackTrace();
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                    }
+        Thread read = new Thread(() -> {
+            String line;
+            try {
+                while((line = in.readLine()) != null) {
+                    handleInput(line);
                 }
+                disconnect();
+                appendToPane(mainTextArea, "[" + getTime() + "] *** You have been disconnected! ***", Color.RED, Color.YELLOW);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (BadLocationException e) {
+                e.printStackTrace();
             }
         });
         read.start();
     }
 
     private void createPopupAsync(final String header, final String paragraph) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                if (!window.isActive()) {
-                    new Notification(connectImg, header, paragraph).execute();
-                }
+        SwingUtilities.invokeLater(() -> {
+            if (!window.isActive()) {
+                new Notification(connectImg, header, paragraph).execute();
             }
         });
     }
@@ -126,6 +112,10 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
         String time = "[" + getTime() + "]";
         if (str.equals("NICK?")) {
             write("NICK " + nick.getText());
+        }
+        else if (str.equals("ERROR nick already taken")) {
+            disconnect();
+            appendToPane(mainTextArea, "Nickname already in use!", Color.RED, Color.BLUE);
         }
         else if (str.equals("NICK OK")) {
             appendToPane(mainTextArea, "Welcome to Linkura Chat!", Color.RED, Color.DARK_GRAY);
@@ -193,16 +183,12 @@ public class ChatClient extends Main implements ActionListener, KeyListener {
     }
 
     private void write(String msg) throws BadLocationException, IOException {
-        if (out != null) {
+        if (socket != null) {
             socket.setSoTimeout(5000);
             out.write(msg + "\r\n");
             out.flush();
             chat.setText("");
             socket.setSoTimeout(0);
-        }
-        else {
-            appendToPane(mainTextArea, "[" + getTime() + "] *** You are disconnected! ***", Color.RED, Color.YELLOW);
-            chat.setText("");
         }
     }
 
